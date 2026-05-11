@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דוח מנויים - ותן חלקנו</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a2744;
+    color: #e8eaf6;
+    direction: rtl;
+    min-height: 100vh;
+  }
+  /* ─── HEADER ─── */
+  .header {
+    background: linear-gradient(135deg, #0d1b3e 0%, #1a2744 100%);
+    border-bottom: 2px solid #2e4080;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header h1 { font-size: 1.4rem; color: #fff; font-weight: 700; }
+  .header h1 span { color: #7eb3ff; }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-circle {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #2e5daa, #7eb3ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+  }
+  .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: none;
+    cursor: pointer; font-size: 0.85rem; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #4a7cf0; color: white; }
+  .btn-primary:hover { background: #3a6ce0; }
+  .btn-secondary { background: #2e4080; color: #c8d4ff; border: 1px solid #4a5a90; }
+  .btn-secondary:hover { background: #3a5090; }
+  .btn-success { background: #1e7a3a; color: white; }
+  .btn-success:hover { background: #1a6a30; }
+  .btn-export { background: #5a3a10; color: #ffc060; border: 1px solid #8a5a20; }
+  .btn-export:hover { background: #7a5010; }
+  select, input[type="date"] {
+    background: #2e4080; color: #e8eaf6; border: 1px solid #4a5a90;
+    padding: 7px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+  }
+  /* ─── LOADING ─── */
+  #loading {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 60vh; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid #2e4080;
+    border-top-color: #4a7cf0; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #app { display: none; }
+  /* ─── ALERTS ─── */
+  #alerts-bar { padding: 0 24px; }
+  .alert-item {
+    background: #5a1a1a; border-left: 4px solid #e05252;
+    border-radius: 6px; padding: 10px 14px; margin: 6px 0;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 8px;
+  }
+  .alert-item.warn { background: #4a3a10; border-color: #e0a040; }
+  /* ─── DATE TABS ─── */
+  .date-tabs {
+    display: flex; gap: 4px; padding: 12px 24px 0;
+    overflow-x: auto; flex-wrap: wrap;
+  }
+  .date-tab {
+    padding: 7px 16px; border-radius: 8px 8px 0 0;
+    background: #2e4080; color: #8899cc; border: none;
+    cursor: pointer; font-size: 0.82rem; white-space: nowrap; transition: all 0.2s;
+  }
+  .date-tab.active { background: #1a2d60; color: #fff; border-bottom: 2px solid #4a7cf0; }
+  .date-tab:hover:not(.active) { background: #3a5090; color: #c8d4ff; }
+  .date-tab .subs-badge {
+    display: inline-block; background: #2a5a2a; color: #6fdf6f;
+    border-radius: 10px; padding: 1px 7px; font-size: 0.7rem; margin-right: 5px;
+  }
+  /* ─── MAIN ─── */
+  .main { padding: 0 24px 24px; }
+  /* ─── KPI CARDS ─── */
+  .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+  .kpi-card {
+    flex: 1; min-width: 140px;
+    background: linear-gradient(135deg, #1e3060, #2a3e70);
+    border: 1px solid #3a4e80; border-radius: 12px;
+    padding: 16px; text-align: center; transition: transform 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); }
+  .kpi-card .label { font-size: 0.72rem; color: #8899cc; margin-bottom: 6px; text-transform: uppercase; }
+  .kpi-card .value { font-size: 2rem; font-weight: 700; color: #7eb3ff; line-height: 1; }
+  .kpi-card .unit { font-size: 0.75rem; color: #8899cc; margin-top: 4px; }
+  .kpi-card .delta { font-size: 0.75rem; margin-top: 6px; }
+  .delta.up { color: #4fde7a; }
+  .delta.down { color: #e05252; }
+  .kpi-card.alert-high { border-color: #e05252; }
+  .kpi-card.alert-high .value { color: #e05252; }
+  /* ─── CHARTS ─── */
+  .charts-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chart-box {
+    flex: 1; min-width: 300px;
+    background: #1e3060; border: 1px solid #3a4e80; border-radius: 12px; padding: 16px;
+  }
+  .chart-box h3 { font-size: 0.9rem; color: #c8d4ff; margin-bottom: 12px; }
+  .chart-container { position: relative; height: 200px; }
+  /* ─── TABLES ─── */
+  .tables-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .table-box {
+    flex: 1; min-width: 280px;
+    background: #1e3060; border: 1px solid #3a4e80; border-radius: 12px; padding: 16px;
+  }
+  .table-box h3 { font-size: 0.9rem; color: #c8d4ff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .badge-portal { background: #1a4a7a; color: #7eb3ff; }
+  .badge-tripling { background: #3a1a5a; color: #c07aff; }
+  .badge-other { background: #1a4a3a; color: #4fde7a; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  th { background: #0d1b3e; color: #8899cc; padding: 7px 10px; text-align: right; font-weight: 600; font-size: 0.72rem; }
+  td { padding: 7px 10px; border-bottom: 1px solid #2a3e70; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #1a2d60; }
+  .total-row td { background: #0d1b3e; font-weight: 700; color: #c8d4ff; }
+  .rate-bar { display: inline-flex; align-items: center; gap: 6px; width: 100%; }
+  .bar-bg { flex: 1; height: 8px; background: #2a3e70; border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .bar-fill.high { background: #2a8a3a; }
+  .bar-fill.mid { background: #8a7a2a; }
+  .bar-fill.low { background: #8a2a2a; }
+  .rate-val { font-size: 0.75rem; color: #c8d4ff; min-width: 40px; }
+  /* ─── CAMPAIGN ─── */
+  .campaign-box {
+    background: #1e3060; border: 1px solid #3a4e80; border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .campaign-box h3 { font-size: 0.9rem; color: #c8d4ff; margin-bottom: 12px; }
+  .cost-high { color: #e05252; font-weight: 700; }
+  .cost-mid { color: #e0a040; }
+  .cost-ok { color: #4fde7a; }
+  /* ─── COMPARE ─── */
+  .compare-section {
+    background: #1e3060; border: 1px solid #3a4e80; border-radius: 12px;
+    padding: 16px; margin-bottom: 16px; display: none;
+  }
+  .compare-section.active { display: block; }
+  .compare-section h3 { font-size: 0.9rem; color: #c8d4ff; margin-bottom: 12px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .compare-col { background: #0d1b3e; border-radius: 8px; padding: 12px; }
+  .compare-col h4 { color: #8899cc; font-size: 0.8rem; margin-bottom: 8px; }
+  .compare-metric { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #2a3e70; font-size: 0.82rem; }
+  .compare-metric:last-child { border-bottom: none; }
+  .better { color: #4fde7a; }
+  .worse { color: #e05252; }
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,10,0.8); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1a2744; border: 1px solid #3a4e80; border-radius: 16px;
+    padding: 24px; width: 90%; max-width: 640px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal h2 { font-size: 1.1rem; color: #fff; margin-bottom: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 0.78rem; color: #8899cc; }
+  .form-group input {
+    background: #2e4080; color: #e8eaf6; border: 1px solid #4a5a90;
+    padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;
+  }
+  .form-group input:focus { outline: none; border-color: #4a7cf0; }
+  .form-section-title {
+    grid-column: 1 / -1; font-size: 0.8rem; color: #4a7cf0;
+    font-weight: 700; padding-top: 8px; border-top: 1px solid #2a3e70; margin-top: 4px;
+  }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  /* ─── EXPORT BANNER ─── */
+  #export-banner {
+    display: none; background: #3a2a08; border: 1px solid #8a6020;
+    margin: 0 24px 8px; border-radius: 8px; padding: 10px 16px;
+    font-size: 0.85rem; color: #ffc060;
+    align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  #export-banner.visible { display: flex; }
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .kpi-card .value { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-area">
+    <div class="logo-circle">✡</div>
+    <h1>דוח מנויים <span>ותן חלקנו</span></h1>
+  </div>
+  <div class="header-controls">
+    <button class="btn btn-secondary" onclick="toggleCompare()">⇄ השוואת ימים</button>
+    <button class="btn btn-success" onclick="openModal()">＋ הוסף יום</button>
+    <button class="btn btn-export" id="btn-export" onclick="exportData()" style="display:none">⬇ ייצא data.json</button>
+  </div>
+</div>
+
+<div id="export-banner">
+  ⚠️ הוספת נתונים חדשים — לחץ <strong>ייצא data.json</strong>, החלף את הקובץ ב-repo ועשה git push כדי לשמור לכולם.
+</div>
+
+<div id="alerts-bar"></div>
+<div class="date-tabs" id="date-tabs"></div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div style="color:#8899cc;font-size:0.9rem;">טוען נתונים...</div>
+</div>
+
+<div id="app">
+  <div class="main">
+    <div class="kpi-row" id="kpi-row"></div>
+    <div class="charts-row">
+      <div class="chart-box" style="flex:2">
+        <h3>📈 מגמת מנויים ועלות לאורך זמן</h3>
+        <div class="chart-container"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-box" style="flex:1">
+        <h3>📊 מנויים לפי ערוץ — יום נבחר</h3>
+        <div class="chart-container"><canvas id="channelChart"></canvas></div>
+      </div>
+    </div>
+    <div class="compare-section" id="compare-section">
+      <h3>⇄ השוואה בין ימים</h3>
+      <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+        <div><label style="font-size:0.78rem;color:#8899cc;">יום א'&nbsp;</label>
+          <select id="compare-date-a" onchange="renderCompare()"></select></div>
+        <div><label style="font-size:0.78rem;color:#8899cc;">יום ב'&nbsp;</label>
+          <select id="compare-date-b" onchange="renderCompare()"></select></div>
+      </div>
+      <div class="compare-grid" id="compare-grid"></div>
+    </div>
+    <div class="tables-row" id="tables-row"></div>
+    <div class="campaign-box">
+      <h3>💰 עלויות לפי קמפיין</h3>
+      <div style="overflow-x:auto;">
+        <table id="campaign-table">
+          <thead><tr><th>מקור הגעה</th><th>מנויים</th><th>לוגיסטיקה</th><th>מדיה</th><th>עלות/מנוי</th></tr></thead>
+          <tbody id="campaign-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2>＋ הזנת נתוני יום חדש</h2>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>תאריך</label>
+        <input type="date" id="f-date" />
+      </div>
+      <div class="form-section-title">📋 סיכום כללי</div>
+      <div class="form-group"><label>סה"כ מנויים</label><input type="number" id="f-total-subs" placeholder="0"/></div>
+      <div class="form-group"><label>עלות מנוי (₪)</label><input type="number" id="f-cost-per-sub" placeholder="0"/></div>
+      <div class="form-section-title">📞 אורטל דיגיטל</div>
+      <div class="form-group"><label>שיחות</label><input type="number" id="f-portal-calls" placeholder="0"/></div>
+      <div class="form-group"><label>מנויים</label><input type="number" id="f-portal-subs" placeholder="0"/></div>
+      <div class="form-section-title">📞 טריפל</div>
+      <div class="form-group"><label>שיחות סה"כ</label><input type="number" id="f-trip-calls" placeholder="0"/></div>
+      <div class="form-group"><label>מנויים סה"כ</label><input type="number" id="f-trip-subs" placeholder="0"/></div>
+      <div class="form-group"><label>מנויים — טלכלל</label><input type="number" id="f-trip-talklal" placeholder="0"/></div>
+      <div class="form-group"><label>מנויים — מוקד מאורות</label><input type="number" id="f-trip-moked" placeholder="0"/></div>
+      <div class="form-section-title">📞 אחר</div>
+      <div class="form-group"><label>שיחות</label><input type="number" id="f-other-calls" placeholder="0"/></div>
+      <div class="form-group"><label>מנויים</label><input type="number" id="f-other-subs" placeholder="0"/></div>
+      <div class="form-section-title">📱 ערוצים נוספים</div>
+      <div class="form-group"><label>אפליקציה</label><input type="number" id="f-app-subs" placeholder="0"/></div>
+      <div class="form-group"><label>לידים קרים</label><input type="number" id="f-cold-subs" placeholder="0"/></div>
+      <div class="form-section-title">💰 עלויות</div>
+      <div class="form-group"><label>לוגיסטיקה כוללת (₪)</label><input type="number" id="f-logistics" placeholder="0"/></div>
+      <div class="form-group"><label>מדיה כוללת (₪)</label><input type="number" id="f-media" placeholder="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">ביטול</button>
+      <button class="btn btn-primary" onclick="saveDay()">שמור יום</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let data = [];
+let currentDateIdx = 0;
+let compareMode = false;
+let trendChart, channelChart;
+let hasUnsavedChanges = false;
+const COST_ALERT = 1500;
+const RATE_ALERT = 10;
+
+async function init() {
+  try {
+    const res = await fetch('data.json?v=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    data = await res.json();
+    data.sort((a, b) => a.date.localeCompare(b.date));
+    currentDateIdx = data.length - 1;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderAll();
+  } catch (e) {
+    document.getElementById('loading').innerHTML = `
+      <div style="text-align:center;color:#e05252;max-width:400px;">
+        <div style="font-size:2rem;margin-bottom:12px;">⚠️</div>
+        <div style="font-weight:700;margin-bottom:8px;">לא ניתן לטעון את data.json</div>
+        <div style="font-size:0.82rem;color:#8899cc;line-height:1.6;">
+          כשפותחים מקובץ מקומי (file://) הדפדפן חוסם קריאת JSON.<br>
+          <strong style="color:#ffc060;">הפתרון:</strong> העלה ל-GitHub Pages ופתח מ-HTTPS.
+        </div>
+      </div>`;
+  }
+}
+
+function fmtDate(d) { const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+function fmtNum(n) { return n?.toLocaleString('he-IL')||'0'; }
+function rate(subs,calls) { if(!calls)return 0; return Math.round((subs/calls)*10000)/100; }
+function getDayLabel(d) { return fmtDate(d.date); }
+
+function exportData() {
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='data.json'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function renderAlerts(d) {
+  const bar=document.getElementById('alerts-bar'); const alerts=[];
+  if(d.costPerSub>COST_ALERT) alerts.push({type:'error',msg:`🚨 עלות מנוי גבוהה: ${fmtNum(d.costPerSub)}₪`});
+  const tripRate=rate(d.tripling.subs,d.tripling.calls);
+  if(tripRate>0&&tripRate<RATE_ALERT) alerts.push({type:'warn',msg:`⚠️ אחוז הצלחה נמוך בטריפל: ${tripRate}%`});
+  d.campaigns?.forEach(c=>{ if(c.costPer>COST_ALERT) alerts.push({type:'warn',msg:`⚠️ עלות גבוהה ב"${c.name}": ${fmtNum(c.costPer)}₪/מנוי`}); });
+  if(!alerts.length){bar.innerHTML=`<div style="padding:8px 24px;font-size:0.8rem;color:#4fde7a;">✅ אין חריגות ל-${getDayLabel(d)}</div>`;return;}
+  bar.innerHTML=alerts.map(a=>`<div class="alert-item ${a.type==='warn'?'warn':''}">${a.msg}</div>`).join('');
+}
+
+function renderTabs() {
+  document.getElementById('date-tabs').innerHTML=data.map((d,i)=>
+    `<button class="date-tab ${i===currentDateIdx?'active':''}" onclick="selectDay(${i})">${getDayLabel(d)}<span class="subs-badge">${d.totalSubs}</span></button>`
+  ).join('');
+}
+function selectDay(idx){currentDateIdx=idx;renderAll();}
+
+function renderKPIs(d,prev) {
+  const tripRate=rate(d.tripling.subs,d.tripling.calls);
+  const otherRate=rate(d.other.subs,d.other.calls);
+  const delta=(val,prevVal,unit='',lowerIsBetter=false)=>{
+    if(prev===null||prevVal===undefined)return '';
+    const diff=val-prevVal; if(diff===0)return '';
+    const better=lowerIsBetter?diff<0:diff>0;
+    return `<div class="delta ${better?'up':'down'}">${diff>0?'+':''}${fmtNum(Math.round(diff*100)/100)}${unit} מיום קודם</div>`;
+  };
+  const cards=[
+    {label:'מנויים שנוספו',value:d.totalSubs,unit:'מנויים',cls:'',dh:delta(d.totalSubs,prev?.totalSubs)},
+    {label:'עלות מנוי',value:`${fmtNum(d.costPerSub)}₪`,unit:'לכל מנוי',cls:d.costPerSub>COST_ALERT?'alert-high':'',dh:delta(d.costPerSub,prev?.costPerSub,'₪',true)},
+    {label:'הצלחה טריפל',value:`${tripRate}%`,unit:`${d.tripling.subs} מנויים / ${d.tripling.calls} שיחות`,cls:(tripRate>0&&tripRate<RATE_ALERT)?'alert-high':'',dh:delta(tripRate,prev?rate(prev.tripling.subs,prev.tripling.calls):null,'%')},
+    {label:'הצלחה אחר',value:`${otherRate}%`,unit:`${d.other.subs} מנויים / ${d.other.calls} שיחות`,cls:'',dh:delta(otherRate,prev?rate(prev.other.subs,prev.other.calls):null,'%')},
+    {label:'מנויי אפליקציה',value:d.appSubs||0,unit:'דרך האפליקציה',cls:'',dh:delta(d.appSubs||0,prev?.appSubs||0)},
+    {label:'עלות מדיה',value:`${fmtNum(d.mediaCost)}₪`,unit:'הוצאות מדיה',cls:'',dh:delta(d.mediaCost,prev?.mediaCost,'₪',true)}
+  ];
+  document.getElementById('kpi-row').innerHTML=cards.map(c=>`<div class="kpi-card ${c.cls}"><div class="label">${c.label}</div><div class="value">${c.value}</div><div class="unit">${c.unit}</div>${c.dh}</div>`).join('');
+}
+
+function agentTable(section,label,badgeCls) {
+  const rows=(section.agents||[]).map(a=>{const r=rate(a.subs,a.calls);const cls=r>=20?'high':r>=10?'mid':'low';
+    return `<tr><td>${a.name}</td><td>${a.calls||0}</td><td>${a.subs}</td><td><div class="rate-bar"><div class="bar-bg"><div class="bar-fill ${cls}" style="width:${Math.min(r,100)}%"></div></div><span class="rate-val">${r}%</span></div></td></tr>`;}).join('');
+  const tr=rate(section.subs,section.calls);const tc=tr>=20?'high':tr>=10?'mid':'low';
+  return `<div class="table-box"><h3>${label} <span class="section-badge ${badgeCls}">${section.subs} מנויים</span></h3>
+    <table><thead><tr><th>סוכן</th><th>שיחות</th><th>מנויים</th><th>% הצלחה</th></tr></thead>
+    <tbody>${rows}<tr class="total-row"><td><b>סה"כ</b></td><td>${section.calls}</td><td>${section.subs}</td>
+    <td><div class="rate-bar"><div class="bar-bg"><div class="bar-fill ${tc}" style="width:${Math.min(tr,100)}%"></div></div><span class="rate-val">${tr}%</span></div></td></tr></tbody></table></div>`;
+}
+function renderTables(d) {
+  document.getElementById('tables-row').innerHTML=agentTable(d.portal,'📞 אורטל דיגיטל','badge-portal')+agentTable(d.tripling,'📞 טריפל','badge-tripling')+agentTable(d.other,'📞 אחר','badge-other');
+}
+
+function renderCampaigns(d) {
+  const tbody=document.getElementById('campaign-tbody');
+  if(!d.campaigns?.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#8899cc;">אין נתוני קמפיינים</td></tr>';return;}
+  const rows=d.campaigns.map(c=>{const cls=c.costPer>COST_ALERT?'cost-high':c.costPer>800?'cost-mid':'cost-ok';
+    return `<tr><td>${c.name}</td><td>${c.subs}</td><td>${c.logistics?fmtNum(c.logistics)+'₪':'—'}</td><td>${c.media?fmtNum(c.media)+'₪':'—'}</td><td class="${cls}">${fmtNum(c.costPer)}₪</td></tr>`;}).join('');
+  const totSubs=d.campaigns.reduce((a,c)=>a+c.subs,0);
+  const totLog=d.campaigns.reduce((a,c)=>a+(c.logistics||0),0);
+  const totMed=d.campaigns.reduce((a,c)=>a+(c.media||0),0);
+  tbody.innerHTML=rows+`<tr class="total-row"><td><b>סה"כ</b></td><td><b>${totSubs}</b></td><td><b>${fmtNum(totLog)}₪</b></td><td><b>${fmtNum(totMed)}₪</b></td><td><b>${fmtNum(d.costPerSub)}₪</b></td></tr>`;
+}
+
+function renderCharts() {
+  const labels=data.map(getDayLabel);
+  if(trendChart)trendChart.destroy();
+  trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels,datasets:[
+    {label:'מנויים',data:data.map(d=>d.totalSubs),borderColor:'#4a7cf0',backgroundColor:'rgba(74,124,240,0.15)',tension:0.3,yAxisID:'y'},
+    {label:'עלות מנוי (₪)',data:data.map(d=>d.costPerSub),borderColor:'#e05252',backgroundColor:'rgba(224,82,82,0.1)',tension:0.3,yAxisID:'y2',borderDash:[5,3]},
+    {label:'% הצלחה טריפל',data:data.map(d=>rate(d.tripling.subs,d.tripling.calls)),borderColor:'#4fde7a',tension:0.3,yAxisID:'y3',borderDash:[2,2]}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#c8d4ff',font:{size:11}}}},
+    scales:{x:{ticks:{color:'#8899cc'},grid:{color:'#2a3e70'}},y:{type:'linear',position:'right',ticks:{color:'#4a7cf0'},grid:{color:'#2a3e70'}},y2:{type:'linear',position:'left',ticks:{color:'#e05252'},grid:{display:false}},y3:{type:'linear',display:false}}}});
+  const d=data[currentDateIdx];
+  if(channelChart)channelChart.destroy();
+  channelChart=new Chart(document.getElementById('channelChart'),{type:'doughnut',data:{labels:['טריפל','אחר','אורטל דיגיטל','אפליקציה','לידים קרים'],
+    datasets:[{data:[d.tripling.subs,d.other.subs,d.portal.subs,d.appSubs||0,d.coldSubs||0],backgroundColor:['#7c3aed','#2563eb','#059669','#d97706','#dc2626'],borderColor:'#1a2744',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#c8d4ff',font:{size:10},padding:8}}}}});
+}
+
+function toggleCompare() {
+  compareMode=!compareMode;
+  document.getElementById('compare-section').classList.toggle('active',compareMode);
+  if(compareMode){
+    const opts=data.map((d,i)=>`<option value="${i}">${getDayLabel(d)}</option>`).join('');
+    document.getElementById('compare-date-a').innerHTML=opts;
+    document.getElementById('compare-date-b').innerHTML=opts;
+    document.getElementById('compare-date-a').value=Math.max(0,data.length-2);
+    document.getElementById('compare-date-b').value=data.length-1;
+    renderCompare();
+  }
+}
+function renderCompare() {
+  const iA=parseInt(document.getElementById('compare-date-a').value);
+  const iB=parseInt(document.getElementById('compare-date-b').value);
+  const dA=data[iA],dB=data[iB];
+  const metrics=[
+    {label:'מנויים סה"כ',a:dA.totalSubs,b:dB.totalSubs,higher:true,unit:''},
+    {label:'עלות מנוי',a:dA.costPerSub,b:dB.costPerSub,higher:false,unit:'₪'},
+    {label:'הצלחה טריפל',a:rate(dA.tripling.subs,dA.tripling.calls),b:rate(dB.tripling.subs,dB.tripling.calls),higher:true,unit:'%'},
+    {label:'הצלחה אחר',a:rate(dA.other.subs,dA.other.calls),b:rate(dB.other.subs,dB.other.calls),higher:true,unit:'%'},
+    {label:'שיחות טריפל',a:dA.tripling.calls,b:dB.tripling.calls,higher:true,unit:''},
+    {label:'מנויי אפליקציה',a:dA.appSubs||0,b:dB.appSubs||0,higher:true,unit:''},
+    {label:'עלות מדיה',a:dA.mediaCost,b:dB.mediaCost,higher:false,unit:'₪'}
+  ];
+  document.getElementById('compare-grid').innerHTML=[dA,dB].map((d,side)=>
+    `<div class="compare-col"><h4>${getDayLabel(d)}</h4>${metrics.map(m=>{
+      const val=side===0?m.a:m.b;const other=side===0?m.b:m.a;
+      const better=m.higher?val>=other:val<=other;const cls=val===other?'':better?'better':'worse';
+      return `<div class="compare-metric"><span>${m.label}</span><span class="${cls}">${fmtNum(val)}${m.unit}</span></div>`;
+    }).join('')}</div>`
+  ).join('');
+}
+
+function openModal() {
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  ['f-total-subs','f-cost-per-sub','f-portal-calls','f-portal-subs','f-trip-calls','f-trip-subs','f-trip-talklal','f-trip-moked','f-other-calls','f-other-subs','f-app-subs','f-cold-subs','f-logistics','f-media'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function saveDay() {
+  const get=id=>parseInt(document.getElementById(id).value)||0;
+  const tripSubs=get('f-trip-subs'),tripTalklal=get('f-trip-talklal'),tripMoked=get('f-trip-moked');
+  const tripOther=Math.max(0,tripSubs-tripTalklal-tripMoked),tripCalls=get('f-trip-calls');
+  const newDay={date:document.getElementById('f-date').value,totalSubs:get('f-total-subs'),costPerSub:get('f-cost-per-sub'),
+    portal:{calls:get('f-portal-calls'),subs:get('f-portal-subs'),agents:[{name:'טלכלל',calls:get('f-portal-calls'),subs:get('f-portal-subs')}]},
+    tripling:{calls:tripCalls,subs:tripSubs,agents:[{name:'טלכלל',calls:Math.round(tripCalls*0.6),subs:tripTalklal},{name:'מוקד מאורות',calls:Math.round(tripCalls*0.3),subs:tripMoked},{name:'אחר',calls:Math.round(tripCalls*0.1),subs:tripOther}]},
+    other:{calls:get('f-other-calls'),subs:get('f-other-subs'),agents:[{name:'סה"כ',calls:get('f-other-calls'),subs:get('f-other-subs')}]},
+    appSubs:get('f-app-subs'),coldSubs:get('f-cold-subs'),logistics:get('f-logistics'),mediaCost:get('f-media'),campaigns:[]};
+  const existing=data.findIndex(d=>d.date===newDay.date);
+  if(existing>=0){data[existing]=newDay;currentDateIdx=existing;}
+  else{data.push(newDay);data.sort((a,b)=>a.date.localeCompare(b.date));currentDateIdx=data.findIndex(d=>d.date===newDay.date);}
+  hasUnsavedChanges=true;
+  document.getElementById('btn-export').style.display='inline-block';
+  document.getElementById('export-banner').classList.add('visible');
+  closeModal();renderAll();
+}
+
+function renderAll() {
+  const d=data[currentDateIdx];const prev=currentDateIdx>0?data[currentDateIdx-1]:null;
+  renderTabs();renderAlerts(d);renderKPIs(d,prev);renderTables(d);renderCampaigns(d);renderCharts();
+  if(compareMode)renderCompare();
+}
+
+init();
+</script>
+</body>
+</html>

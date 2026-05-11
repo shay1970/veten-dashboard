@@ -1,0 +1,132 @@
+[
+  {
+    "date": "2026-05-06",
+    "totalSubs": 22,
+    "costPerSub": 690,
+    "portal": {
+      "calls": 11,
+      "subs": 0,
+      "agents": [
+        { "name": "טלכלל", "calls": 11, "subs": 0 }
+      ]
+    },
+    "tripling": {
+      "calls": 74,
+      "subs": 13,
+      "agents": [
+        { "name": "טלכלל", "calls": 45, "subs": 7 },
+        { "name": "טריפל עצמאי", "calls": 0, "subs": 5 },
+        { "name": "מוקד מאורות", "calls": 26, "subs": 1 }
+      ]
+    },
+    "other": {
+      "calls": 23,
+      "subs": 4,
+      "agents": [
+        { "name": "אחר", "calls": 3, "subs": 3 },
+        { "name": "טלכלל", "calls": 9, "subs": 1 },
+        { "name": "מוקד מאורות", "calls": 11, "subs": 0 }
+      ]
+    },
+    "appSubs": 5,
+    "coldSubs": 0,
+    "logistics": 570,
+    "mediaCost": 14604,
+    "campaigns": [
+      { "name": "קמפיין ותן חלקינו טריפל גוגל", "subs": 4, "logistics": 100, "media": 3378, "costPer": 870 },
+      { "name": "קמפיין ותן חלקינו טריפל טיקטוק", "subs": 2, "logistics": 43, "media": 2980, "costPer": 1511 },
+      { "name": "קמפיין ותן חלקינו טריפל פייסבוק", "subs": 7, "logistics": 213, "media": 8246, "costPer": 1208 },
+      { "name": "קמפיין ותן חלקינו רשתות חברתיות", "subs": 1, "logistics": 43, "media": 0, "costPer": 43 },
+      { "name": "קמפיין שמע מחבר", "subs": 3, "logistics": 162, "media": 0, "costPer": 54 },
+      { "name": "אפליקציה ותן חלקינו", "subs": 5, "logistics": 9, "media": 0, "costPer": 2 }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "totalSubs": 22,
+    "costPerSub": 1037,
+    "portal": {
+      "calls": 6,
+      "subs": 1,
+      "agents": [
+        { "name": "טלכלל", "calls": 6, "subs": 1 }
+      ]
+    },
+    "tripling": {
+      "calls": 83,
+      "subs": 15,
+      "agents": [
+        { "name": "טלכלל", "calls": 42, "subs": 9 },
+        { "name": "ליד ללא מענה", "calls": 0, "subs": 1 },
+        { "name": "טריפל עצמאי", "calls": 0, "subs": 3 },
+        { "name": "אחר", "calls": 4, "subs": 0 }
+      ]
+    },
+    "other": {
+      "calls": 5,
+      "subs": 2,
+      "agents": [
+        { "name": "אחר", "calls": 3, "subs": 2 },
+        { "name": "טלכלל", "calls": 1, "subs": 0 },
+        { "name": "מוקד מאורות", "calls": 1, "subs": 0 }
+      ]
+    },
+    "appSubs": 4,
+    "coldSubs": 1,
+    "logistics": 551,
+    "mediaCost": 22260,
+    "campaigns": [
+      { "name": "קמפיין ותן חלקינו טריפל גוגל", "subs": 5, "logistics": 128, "media": 5065, "costPer": 1039 },
+      { "name": "קמפיין ותן חלקינו טריפל טיקטוק", "subs": 3, "logistics": 143, "media": 4706, "costPer": 1616 },
+      { "name": "קמפיין ותן חלקינו טריפל פייסבוק", "subs": 7, "logistics": 228, "media": 12489, "costPer": 1817 },
+      { "name": "שמע מחבר", "subs": 1, "logistics": 43, "media": 0, "costPer": 43 },
+      { "name": "אפליקציה ותן חלקינו", "subs": 4, "logistics": 9, "media": 0, "costPer": 2 }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "totalSubs": 45,
+    "costPerSub": 354,
+    "portal": {
+      "calls": 24,
+      "subs": 0,
+      "agents": [
+        { "name": "טלכלל", "calls": 24, "subs": 0 }
+      ]
+    },
+    "tripling": {
+      "calls": 94,
+      "subs": 16,
+      "agents": [
+        { "name": "טלכלל", "calls": 54, "subs": 9 },
+        { "name": "טריפל עצמאי", "calls": 0, "subs": 3 },
+        { "name": "מוקד מאורות", "calls": 33, "subs": 4 },
+        { "name": "אחר", "calls": 7, "subs": 0 }
+      ]
+    },
+    "other": {
+      "calls": 18,
+      "subs": 8,
+      "agents": [
+        { "name": "אחר", "calls": 4, "subs": 3 },
+        { "name": "טלכלל", "calls": 10, "subs": 2 },
+        { "name": "מוקד מאורות", "calls": 4, "subs": 3 }
+      ]
+    },
+    "appSubs": 21,
+    "coldSubs": 0,
+    "logistics": 1142,
+    "mediaCost": 14781,
+    "campaigns": [
+      { "name": "קמפיין ותן חלקינו טריפל גוגל", "subs": 5, "logistics": 158, "media": 4476, "costPer": 927 },
+      { "name": "קמפיין ותן חלקינו טריפל טיקטוק", "subs": 1, "logistics": 43, "media": 2988, "costPer": 3031 },
+      { "name": "קמפיין ותן חלקינו טריפל פייסבוק", "subs": 10, "logistics": 424, "media": 7317, "costPer": 774 },
+      { "name": "קמפיין ותן חלקינו רשתות חברתיות", "subs": 1, "logistics": 43, "media": 0, "costPer": 43 },
+      { "name": "קמפיין פייסבוק", "subs": 1, "logistics": 43, "media": 0, "costPer": 43 },
+      { "name": "קמפיין פניות בוט", "subs": 1, "logistics": 58, "media": 0, "costPer": 58 },
+      { "name": "קמפיין שמע מחבר", "subs": 4, "logistics": 208, "media": 0, "costPer": 52 },
+      { "name": "קמפיין ותן בלבנו פייסבוק", "subs": 1, "logistics": 58, "media": 0, "costPer": 58 },
+      { "name": "אפליקציה ותן חלקינו", "subs": 21, "logistics": 110, "media": 0, "costPer": 5 }
+    ]
+  }
+]
